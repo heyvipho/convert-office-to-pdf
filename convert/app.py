@@ -1,5 +1,7 @@
 import os
 import logging
+import requests
+from urllib.parse import urlparse
 from flask import Flask, request, send_file
 from pantomime import FileName, normalize_mimetype, mimetype_extension
 from pantomime.types import PDF
@@ -79,3 +81,36 @@ def convert():
         return (str(ex), 500)
     finally:
         converter.unlock()
+
+@app.route("/convert", methods=["GET"])
+def convert2():
+    upload_file = None
+    if not converter.lock():
+        return ("BUSY", 503)
+    try:
+        converter.prepare()
+        timeout = int(request.args.get("timeout", 7200))
+        upload = request.files.get("file")
+        fileUrl = request.args.get('fileSrc')
+        r = requests.get(fileUrl, allow_redirects=True)
+        print(request.url)
+        parseUrl = urlparse(fileUrl)
+        file_name = os.path.basename(parseUrl.path)
+        print(os.path.basename(file_name))
+        upload_file = os.path.join(CONVERT_DIR, file_name)
+        print(upload_file)
+        open(upload_file, 'wb').write(r.content)
+        out_file = converter.convert_file(upload_file, timeout)
+        return send_file(out_file, mimetype=PDF)
+
+       
+    except ConversionFailure as ex:
+        converter.kill()
+        return (str(ex), 400)
+    except (SystemFailure, Exception) as ex:
+        converter.kill()
+        log.warn("Error: %s", ex)
+        return (str(ex), 500)
+    finally:
+        converter.unlock()
+

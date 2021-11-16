@@ -36,6 +36,8 @@ USER app
 HEALTHCHECK --interval=10s --timeout=10s --retries=100 \
     CMD curl -f http://localhost:3000/health/live || exit 1
 
+# CMD ["sleep","infinity"]
+
 CMD ["gunicorn", \
     "-w", "4", \
     "--bind", "0.0.0.0:3000", \
@@ -43,3 +45,6 @@ CMD ["gunicorn", \
     "--error-logfile", "-", \
     "--timeout", "84600", \
     "convert.app:app"]
+
+
+# gunicorn -w 4 --bind 0.0.0.0:3000 --access-logfile - --error-logfile - --timeout 84600 convert.app:app

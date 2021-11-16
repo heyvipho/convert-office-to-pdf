@@ -2,3 +2,4 @@ Flask==1.1.2
 pantomime==0.4.1
 gunicorn[gthread]==20.0.4
 psutil==5.8.0
+requests==2.26.0
