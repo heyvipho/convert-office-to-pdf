@@ -1,6 +1,8 @@
 import os
 import logging
 import requests
+import datetime
+import hashlib
 from urllib.parse import urlparse
 from flask import Flask, request, send_file
 from pantomime import FileName, normalize_mimetype, mimetype_extension
@@ -11,6 +13,12 @@ from convert.unoconv import UnoconvConverter
 from convert.formats import load_mime_extensions
 from convert.util import CONVERT_DIR
 from convert.util import SystemFailure, ConversionFailure
+from dotenv import load_dotenv
+
+
+global dic
+
+dic = {}
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger("convert")
@@ -23,6 +31,25 @@ else:
     converter = ProcessConverter()
     converter.kill()
 converter.unlock()
+
+
+def getdotenv(env):
+    try:
+        #global env_path
+        #load_dotenv(dotenv_path=env_path,override=True)
+        load_dotenv(override=True)
+        val = os.getenv(env)
+        return val
+    except (SystemFailure, Exception) as ex:
+        log.warn("Error: %s", ex)
+        return None
+
+def setdotenv(key, value):  # string
+    if key :
+        if not value:
+            value = '\'\''
+        cmd = 'dotenv set -- '+key+' '+value  # set env variable
+        os.system(cmd)
 
 
 @app.route("/")
@@ -82,6 +109,9 @@ def convert():
     finally:
         converter.unlock()
 
+
+
+
 @app.route("/convert", methods=["GET"])
 def convert2():
     upload_file = None
@@ -90,17 +120,25 @@ def convert2():
     try:
         converter.prepare()
         timeout = int(request.args.get("timeout", 7200))
-        upload = request.files.get("file")
+
         fileUrl = request.args.get('fileSrc')
+        hash_object = hashlib.sha256(fileUrl.encode('utf-8'))
+        hashUrl = hash_object.hexdigest()
+        if(getdotenv(hashUrl) != None):
+            out_file = getdotenv(hashUrl)
+            print("out_file")
+            print(out_file)
+            return send_file(out_file, mimetype=PDF)
         r = requests.get(fileUrl, allow_redirects=True)
-        print(request.url)
         parseUrl = urlparse(fileUrl)
-        file_name = os.path.basename(parseUrl.path)
-        print(os.path.basename(file_name))
+        file_name = str(datetime.datetime.now().timestamp()) + os.path.basename(parseUrl.path)
         upload_file = os.path.join(CONVERT_DIR, file_name)
-        print(upload_file)
+        
         open(upload_file, 'wb').write(r.content)
+        print(upload_file)
+
         out_file = converter.convert_file(upload_file, timeout)
+        setdotenv(hashUrl, out_file)
         return send_file(out_file, mimetype=PDF)
 
        

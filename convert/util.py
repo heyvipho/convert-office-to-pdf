@@ -3,6 +3,7 @@ import shutil
 from tempfile import gettempdir
 
 CONVERT_DIR = os.path.join(gettempdir(), "convert")
+OUTPUT_CONVERT_DIR = os.path.join(gettempdir(), "convert-output")
 LOCK_FILE = os.path.join(gettempdir(), "convert.lock")
 INSTANCE_DIR = os.path.join(gettempdir(), "soffice")
 

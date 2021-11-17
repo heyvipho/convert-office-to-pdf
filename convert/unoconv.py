@@ -3,6 +3,7 @@ import uno
 import time
 import logging
 import subprocess
+import datetime
 from threading import Timer
 from com.sun.star.beans import PropertyValue
 from com.sun.star.lang import DisposedException, IllegalArgumentException
@@ -12,13 +13,13 @@ from com.sun.star.script import CannotConvertException
 from com.sun.star.uno import RuntimeException
 
 from convert.common import Converter
-from convert.util import CONVERT_DIR, INSTANCE_DIR, flush_path
+from convert.util import CONVERT_DIR, OUTPUT_CONVERT_DIR, INSTANCE_DIR, flush_path
 from convert.util import SystemFailure, ConversionFailure
 
 
 DESKTOP = "com.sun.star.frame.Desktop"
 RESOLVER = "com.sun.star.bridge.UnoUrlResolver"
-OUT_FILE = os.path.join(CONVERT_DIR, "output.pdf")
+
 CONNECTION = (
     "socket,host=localhost,port=2002,tcpNoDelay=1;urp;StarOffice.ComponentContext"
 )
@@ -124,6 +125,10 @@ class UnoconvConverter(Converter):
 
         if doc is None:
             raise ConversionFailure("Cannot open document.")
+
+        
+        OUT_FILE = os.path.join(OUTPUT_CONVERT_DIR,  str(datetime.datetime.now().timestamp()) + ".pdf")
+    
 
         # log.debug("[%s] opened.", file_name)
         try:

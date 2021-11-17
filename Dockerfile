@@ -31,12 +31,12 @@ COPY setup.py /convert/
 COPY convert /convert/convert/
 RUN pip3 install -q -e .
 
-USER app
+USER root
 
-HEALTHCHECK --interval=10s --timeout=10s --retries=100 \
-    CMD curl -f http://localhost:3000/health/live || exit 1
 
 # CMD ["sleep","infinity"]
+
+
 
 CMD ["gunicorn", \
     "-w", "4", \
