@@ -17,7 +17,7 @@ func main() {
 	log.Println("==============")
 	log.Println(os.TempDir())
 	http.HandleFunc("/convert", handler)
-	http.ListenAndServe(":8080", nil)
+	http.ListenAndServe(":3000", nil)
 }
 
 func downloadFile(path string, url string) (error) {
@@ -44,25 +44,31 @@ func handler(w http.ResponseWriter, r *http.Request) {
 
 	log.Println("request incoming")
 
-	keys, ok := r.URL.Query()["fileUrl"]
+	keys, ok := r.URL.Query()["fileSrc"]
 
 	if !ok || len(keys[0]) < 1 {
 		w.WriteHeader(http.StatusBadRequest)
-		w.Write([]byte("fileUrl Param 'key' is missing"))
+		w.Write([]byte("fileSrc Param 'key' is missing"))
 		return
 	}
 
-	fileUrl := keys[0]
+	fileSrc := keys[0]
 
 	workDir := os.TempDir()
 
-	fileName := "document" + fmt.Sprint(time.Now().Second())
+	fileName := "document" + fmt.Sprint(time.Now().Unix())
 
 	inputFile := filepath.Join(workDir,fileName)
 
 	outputFile := filepath.Join(workDir, fileName + ".pdf")
 
-	downloadFile(inputFile,fileUrl)
+	errorDownload := downloadFile(inputFile,fileSrc)
+
+	if(errorDownload != nil){
+		w.WriteHeader(http.StatusBadRequest)
+		w.Write([]byte("error when download file"))
+		return
+	}
 
 	cmd := exec.Command("libreoffice","--headless","--convert-to" ,"pdf","--outdir" , workDir,  inputFile )
 	_,err := cmd.Output()
