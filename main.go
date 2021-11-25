@@ -16,7 +16,7 @@ import (
 func main() {
 	log.Println("==============")
 	log.Println(os.TempDir())
-	http.HandleFunc("/", handler)
+	http.HandleFunc("/convert", handler)
 	http.ListenAndServe(":8080", nil)
 }
 
