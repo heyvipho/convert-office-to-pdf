@@ -5,11 +5,11 @@ import (
 	"io"
 	"io/ioutil"
 	"log"
+	"math/rand"
 	"net/http"
 	"os"
 	"os/exec"
 	"path/filepath"
-	"math/rand"
 )
 
 var channel = make(chan int, 10)
@@ -17,6 +17,7 @@ var channel = make(chan int, 10)
 
 func main() {
 	channel <- 1
+	log.Println("Server listen port: 3000")
 	http.HandleFunc("/convert", handler)
 	http.ListenAndServe(":3000", nil)
 }
